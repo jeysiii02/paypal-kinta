@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { Stepper } from "@/components/ui/Stepper";
 import { ScenarioCharts } from "@/components/charts/ScenarioCharts";
 import { api, ClientApiError } from "@/lib/client-api";
 import { formatPhp, toCentavos } from "@/lib/money";
@@ -276,8 +277,54 @@ export function DisruptionWorkbench({
       selectedScenario?.financials ?? null,
     ) ?? null;
 
+  const hasActions = actions.length > 0;
+  const steps = [
+    {
+      id: "analyze",
+      label: "Analyze",
+      description: "AI reads the incident",
+      state: analysis
+        ? ("complete" as const)
+        : ("current" as const),
+    },
+    {
+      id: "dependencies",
+      label: "Map impact",
+      description: "Classify commitments",
+      state: dependencies.length
+        ? ("complete" as const)
+        : analysis
+          ? ("current" as const)
+          : ("upcoming" as const),
+    },
+    {
+      id: "scenarios",
+      label: "Compare paths",
+      description: "Cancel · Relocate · Reschedule",
+      state: scenarios.length
+        ? ("complete" as const)
+        : dependencies.length
+          ? ("current" as const)
+          : ("upcoming" as const),
+    },
+    {
+      id: "execute",
+      label: "Execute",
+      description: "Approve + PayPal",
+      state: hasActions
+        ? ("complete" as const)
+        : scenarios.length
+          ? ("current" as const)
+          : ("upcoming" as const),
+    },
+  ];
+
   return (
     <div className="space-y-6">
+      <div className="kinta-rise">
+        <Stepper steps={steps} />
+      </div>
+
       {error ? (
         <div className="rounded-2xl border border-[var(--bad-line)] bg-[var(--bad-soft)] px-4 py-3 text-sm text-[var(--bad)]">
           {error}

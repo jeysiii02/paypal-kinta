@@ -1,13 +1,19 @@
 import Link from "next/link";
-import { AlertTriangle, Plus } from "lucide-react";
+import {
+  AlertTriangle,
+  ArrowRight,
+  FolderKanban,
+  Plus,
+  Sparkles,
+} from "lucide-react";
 import { connection } from "next/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Stat } from "@/components/ui/Stat";
-import { TechStatusPanel } from "@/components/system/TechStatusPanel";
 import { getWorkspaceContext } from "@/lib/workspace";
 import { formatDateShort, formatDateTime } from "@/lib/datetime";
 import { formatPhp } from "@/lib/money";
@@ -31,6 +37,13 @@ export default async function DashboardPage() {
   ).length;
   const disruptedCount = projects.filter((p) => p.status === "DISRUPTED").length;
   const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
+
+  const latestDisruption = project
+    ? await prisma.disruption.findFirst({
+        where: { projectId: project.id },
+        orderBy: { reportedAt: "desc" },
+      })
+    : null;
 
   const [disruptionCount, pendingActions, activity, upcoming] =
     await Promise.all([
@@ -63,60 +76,86 @@ export default async function DashboardPage() {
       }),
     ]);
 
+  const nextHref = latestDisruption
+    ? `/projects/${project!.id}/disruptions/${latestDisruption.id}`
+    : project
+      ? `/projects/${project.id}/disruptions/new`
+      : "/projects/new";
+
   return (
     <AppShell title="Dashboard" projectId={project?.id} projectName={project?.name}>
-      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
-        <div>
-          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--teal)]">
-            Workspace overview
-          </p>
-          <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl tracking-tight text-[var(--ink)] sm:text-4xl">
-            Good day, {user.name.split(" ")[0]}
-          </h1>
-          <p className="mt-2 max-w-2xl text-sm text-[var(--ink-muted)] sm:text-base">
-            Track commitments, spot disruptions early, and move through recovery
-            with evidence-backed plans.
-          </p>
-        </div>
-        <div className="flex flex-wrap gap-2">
-          <ButtonLink href="/projects/new">
-            <Plus className="h-4 w-4" />
-            Create New Project
-          </ButtonLink>
-          <ButtonLink
-            href={
-              project
-                ? `/projects/${project.id}/disruptions/new`
-                : "/disruptions"
-            }
-            variant="secondary"
-          >
-            <AlertTriangle className="h-4 w-4" />
-            Report a Disruption
-          </ButtonLink>
-        </div>
-      </div>
+      <PageHeader
+        eyebrow="Workspace"
+        title={`Good day, ${user.name.split(" ")[0]}`}
+        description="Track commitments, spot disruptions early, and move through recovery with evidence-backed plans."
+        actions={
+          <>
+            <ButtonLink href="/projects/new">
+              <Plus className="h-4 w-4" />
+              New project
+            </ButtonLink>
+            <ButtonLink
+              href={
+                project
+                  ? `/projects/${project.id}/disruptions/new`
+                  : "/disruptions"
+              }
+              variant="secondary"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              Report disruption
+            </ButtonLink>
+          </>
+        }
+      />
 
-      <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-        <Stat label="Total projects" value={String(projects.length)} />
-        <Stat label="Active projects" value={String(activeCount)} />
+      <section className="kinta-rise kinta-rise-delay-1 mt-8 overflow-hidden rounded-[1.6rem] border border-[var(--line)] bg-[linear-gradient(135deg,#071926_0%,#0f3a45_55%,#0d6e67_100%)] px-5 py-6 text-white shadow-[var(--shadow)] sm:px-7">
+        <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+          <div className="max-w-2xl">
+            <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--teal-line)]">
+              Recovery pulse
+            </p>
+            <h2 className="mt-2 font-[family-name:var(--font-display)] text-2xl tracking-tight sm:text-3xl">
+              {latestDisruption
+                ? latestDisruption.title
+                : project
+                  ? `${project.name} is ready for monitoring`
+                  : "Create your first project to begin"}
+            </h2>
+            <p className="mt-2 text-sm leading-relaxed text-white/70">
+              {latestDisruption
+                ? "Continue the disruption workflow: analyze impact, compare scenarios, then approve PayPal actions."
+                : "KINTA keeps AI analysis, financial simulation, and PayPal execution in one coherent loop."}
+            </p>
+          </div>
+          <ButtonLink
+            href={nextHref}
+            variant="secondary"
+            className="border-0 bg-white text-[var(--ink)] hover:bg-[var(--teal-soft)]"
+          >
+            {latestDisruption ? "Continue recovery" : "Get started"}
+            <ArrowRight className="h-4 w-4" />
+          </ButtonLink>
+        </div>
+      </section>
+
+      <div className="mt-6 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Total projects" value={String(projects.length)} accent="ink" />
+        <Stat label="Active projects" value={String(activeCount)} accent="teal" />
         <Stat
           label="Active disruptions"
           value={String(disruptionCount)}
           hint={disruptedCount ? `${disruptedCount} project(s) disrupted` : undefined}
+          accent="signal"
         />
-        <Stat label="Budget tracked" value={formatPhp(totalBudget)} />
+        <Stat label="Budget tracked" value={formatPhp(totalBudget)} accent="amber" />
       </div>
 
-      <div className="mt-8">
-        <TechStatusPanel />
-      </div>
-
-      <div className="mt-8 grid gap-6 xl:grid-cols-[1.35fr_0.9fr]">
+      <div className="kinta-rise kinta-rise-delay-2 mt-8 grid gap-6 xl:grid-cols-[1.35fr_0.9fr]">
         <Card>
           <CardHeader
             title="Recent projects"
-            description="From your workspace database"
+            description="Your active workspace"
             action={
               <ButtonLink href="/projects" variant="ghost">
                 View all
@@ -127,14 +166,18 @@ export default async function DashboardPage() {
             {projects.length === 0 ? (
               <EmptyState
                 title="No projects yet"
-                description="Create a project or run prisma db seed."
+                description="Create a project or seed the University Tech Summit demo."
+                icon={<FolderKanban className="h-5 w-5" />}
+                action={
+                  <ButtonLink href="/projects/new">Create project</ButtonLink>
+                }
               />
             ) : (
               projects.slice(0, 6).map((item) => (
                 <Link
                   key={item.id}
                   href={`/projects/${item.id}`}
-                  className="block rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] px-4 py-4 transition hover:border-[var(--teal-line)] hover:bg-white"
+                  className="block rounded-2xl border border-[var(--line)] bg-[var(--surface-2)] px-4 py-4 transition duration-200 hover:-translate-y-0.5 hover:border-[var(--teal-line)] hover:bg-white hover:shadow-[var(--shadow-sm)]"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div>
@@ -147,8 +190,7 @@ export default async function DashboardPage() {
                         </Badge>
                       </div>
                       <p className="mt-1 text-sm text-[var(--ink-muted)]">
-                        {item.location} ·{" "}
-                        {formatDateShort(item.eventDate)} ·{" "}
+                        {item.location} · {formatDateShort(item.eventDate)} ·{" "}
                         {item.expectedAttendees} attendees
                       </p>
                     </div>
@@ -175,14 +217,16 @@ export default async function DashboardPage() {
             />
             <CardBody className="space-y-3">
               {pendingActions.length === 0 ? (
-                <p className="text-sm text-[var(--ink-muted)]">
-                  Nothing awaiting approval.
-                </p>
+                <EmptyState
+                  title="All clear"
+                  description="No actions awaiting approval right now."
+                  icon={<Sparkles className="h-5 w-5" />}
+                />
               ) : (
                 pendingActions.slice(0, 5).map((action) => (
                   <div
                     key={action.id}
-                    className="rounded-xl border border-[var(--line)] px-3 py-3"
+                    className="rounded-xl border border-[var(--line)] px-3 py-3 transition hover:bg-[var(--surface-2)]"
                   >
                     <div className="flex flex-wrap items-center gap-2">
                       <p className="text-sm font-semibold">{action.title}</p>
@@ -221,7 +265,7 @@ export default async function DashboardPage() {
                   <Link
                     key={item.id}
                     href={`/projects/${item.id}`}
-                    className="flex items-center justify-between gap-3 rounded-xl border border-[var(--line)] px-3 py-3 hover:bg-[var(--surface-2)]"
+                    className="flex items-center justify-between gap-3 rounded-xl border border-[var(--line)] px-3 py-3 transition hover:bg-[var(--surface-2)]"
                   >
                     <div>
                       <p className="text-sm font-semibold">{item.name}</p>
@@ -240,7 +284,7 @@ export default async function DashboardPage() {
         </div>
       </div>
 
-      <Card className="mt-6">
+      <Card className="kinta-rise kinta-rise-delay-3 mt-6">
         <CardHeader
           title="Recent activity"
           description="Live ActivityLog for the active project"
@@ -261,8 +305,7 @@ export default async function DashboardPage() {
               >
                 <p className="text-sm text-[var(--ink)]">{item.message}</p>
                 <p className="mt-1 text-xs text-[var(--ink-muted)]">
-                  {labelize(item.action)} ·{" "}
-                  {formatDateTime(item.createdAt)}
+                  {labelize(item.action)} · {formatDateTime(item.createdAt)}
                 </p>
               </div>
             ))

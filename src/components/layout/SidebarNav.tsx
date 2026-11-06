@@ -58,14 +58,19 @@ function section(
             key={item.href + item.label}
             href={item.href}
             onClick={onNavigate}
-            className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition ${
+            className={`group relative flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition duration-200 ${
               active
                 ? "bg-[var(--ink)] font-semibold text-[#ffffff] shadow-[var(--shadow-sm)]"
                 : "text-[var(--ink-muted)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)]"
             }`}
           >
+            {active ? (
+              <span className="absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-r-full bg-[var(--teal-bright)]" />
+            ) : null}
             <Icon
-              className={`h-4 w-4 shrink-0 ${active ? "text-[#ffffff]" : "opacity-90"}`}
+              className={`h-4 w-4 shrink-0 transition ${
+                active ? "text-[#ffffff]" : "opacity-90 group-hover:opacity-100"
+              }`}
             />
             {item.label}
           </Link>
@@ -87,7 +92,7 @@ export function SidebarNav({ context }: { context: NavContext }) {
       href: "/dashboard",
       label: "Dashboard",
       icon: LayoutDashboard,
-      match: (p) => p === "/dashboard" || p === "/",
+      match: (p) => p === "/dashboard",
     },
     {
       href: "/projects",
@@ -119,7 +124,6 @@ export function SidebarNav({ context }: { context: NavContext }) {
   function onSwitchProject(nextId: string) {
     if (!nextId || nextId === context.projectId) return;
     startTransition(async () => {
-      // Project-scoped routes must navigate; workspace pages refresh in place.
       if (pathname.startsWith("/projects/")) {
         await setActiveProject(nextId, `/projects/${nextId}`);
         return;
@@ -131,13 +135,13 @@ export function SidebarNav({ context }: { context: NavContext }) {
 
   const navBody = (
     <div className="flex h-full flex-col">
-      <div className="border-b border-[var(--line)] px-4 py-4">
+      <div className="border-b border-[var(--line)] px-4 py-5">
         <Link
-          href="/dashboard"
-          className="flex items-center gap-2.5"
+          href="/"
+          className="group flex items-center gap-2.5"
           onClick={() => setOpen(false)}
         >
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ink)] text-sm font-bold text-[#ffffff]">
+          <span className="inline-flex h-10 w-10 items-center justify-center rounded-2xl bg-[linear-gradient(145deg,var(--ink),var(--teal))] text-sm font-bold text-[#ffffff] shadow-[var(--shadow-sm)] transition group-hover:scale-[1.03]">
             K
           </span>
           <div>
@@ -150,7 +154,7 @@ export function SidebarNav({ context }: { context: NavContext }) {
           </div>
         </Link>
 
-        <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-3 py-2">
+        <div className="mt-4 rounded-2xl border border-[var(--line)] bg-[linear-gradient(180deg,#fff,var(--surface-2))] px-3 py-2.5">
           <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
             Active project
           </p>
@@ -159,7 +163,7 @@ export function SidebarNav({ context }: { context: NavContext }) {
           ) : (
             <div className="relative mt-1">
               <select
-                className="w-full appearance-none rounded-lg border border-[var(--line)] bg-white py-2 pl-2.5 pr-8 text-sm font-semibold text-[var(--ink)]"
+                className="w-full appearance-none rounded-xl border border-[var(--line)] bg-white py-2 pl-2.5 pr-8 text-sm font-semibold text-[var(--ink)]"
                 value={context.projectId ?? ""}
                 disabled={pending}
                 onChange={(event) => onSwitchProject(event.target.value)}
@@ -207,7 +211,7 @@ export function SidebarNav({ context }: { context: NavContext }) {
           />
           Settings
         </Link>
-        <div className="rounded-xl border border-[var(--line)] bg-white px-3 py-2">
+        <div className="rounded-2xl border border-[var(--line)] bg-white px-3 py-2.5">
           <div className="flex items-center gap-2">
             <span className="inline-flex h-8 w-8 items-center justify-center rounded-full bg-[var(--teal-soft)] text-xs font-bold text-[var(--teal)]">
               {context.userName.slice(0, 1).toUpperCase()}
@@ -230,14 +234,14 @@ export function SidebarNav({ context }: { context: NavContext }) {
     <>
       <button
         type="button"
-        className="fixed left-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--line)] bg-white shadow-sm lg:hidden"
+        className="fixed left-4 top-4 z-50 inline-flex h-10 w-10 items-center justify-center rounded-xl border border-[var(--line)] bg-white/95 shadow-sm backdrop-blur lg:hidden"
         onClick={() => setOpen(true)}
         aria-label="Open navigation"
       >
         <Menu className="h-5 w-5" />
       </button>
 
-      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-[var(--line)] bg-white/90 backdrop-blur lg:block">
+      <aside className="sticky top-0 hidden h-screen w-64 shrink-0 border-r border-[var(--line)] bg-white/85 backdrop-blur-md lg:block">
         {navBody}
       </aside>
 
@@ -245,7 +249,7 @@ export function SidebarNav({ context }: { context: NavContext }) {
         <div className="fixed inset-0 z-50 lg:hidden">
           <button
             type="button"
-            className="absolute inset-0 bg-[var(--ink)]/40"
+            className="absolute inset-0 bg-[var(--ink)]/45 backdrop-blur-[2px]"
             aria-label="Close navigation overlay"
             onClick={() => setOpen(false)}
           />
@@ -268,7 +272,7 @@ export function SidebarNav({ context }: { context: NavContext }) {
 
 export function MobileTopBar({ title }: { title?: string }) {
   return (
-    <div className="mb-4 flex items-center justify-end gap-2 pt-12 lg:hidden lg:pt-0">
+    <div className="mb-5 flex items-center justify-end gap-2 pt-12 lg:hidden lg:pt-0">
       {title ? (
         <p className="mr-auto truncate pl-14 text-sm font-medium text-[var(--ink-muted)]">
           {title}
@@ -276,7 +280,8 @@ export function MobileTopBar({ title }: { title?: string }) {
       ) : (
         <span className="mr-auto pl-14" />
       )}
-      <span className="inline-flex items-center gap-1 rounded-full border border-[var(--line)] bg-white px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--teal)]">
+      <span className="inline-flex items-center gap-1.5 rounded-full border border-[var(--teal-line)] bg-[var(--teal-soft)] px-2.5 py-1 text-[10px] font-semibold uppercase tracking-[0.12em] text-[var(--teal)]">
+        <span className="kinta-live-dot inline-block h-1.5 w-1.5 rounded-full bg-[var(--teal)]" />
         <Radar className="h-3 w-3" />
         Live demo
       </span>

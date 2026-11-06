@@ -6,6 +6,7 @@ import { DisruptionWorkbench } from "@/components/disruptions/DisruptionWorkbenc
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { disruptionStatusTone, labelize } from "@/lib/status";
 import type { EventAnalysis, RecoveryPlan, Scenario } from "@/lib/types";
 import { prisma } from "@/lib/prisma";
@@ -123,65 +124,67 @@ export default async function DisruptionPage({ params }: Props) {
   );
 
   return (
-    <AppShell projectId={project.id} projectName={project.name}>
-      <div className="mb-6 flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
-            <Link
-              href={`/projects/${project.id}`}
-              className="text-sm text-[var(--ink-muted)] hover:text-[var(--ink)]"
-            >
-              ← {project.name}
-            </Link>
+    <AppShell
+      title="Disruption"
+      projectId={project.id}
+      projectName={project.name}
+    >
+      <div className="mb-2">
+        <Link
+          href={`/projects/${project.id}`}
+          className="text-sm text-[var(--ink-muted)] transition hover:text-[var(--ink)]"
+        >
+          ← {project.name}
+        </Link>
+      </div>
+
+      <PageHeader
+        eyebrow="Disruption recovery"
+        title={disruption.title}
+        description={disruption.description}
+        actions={
+          <>
             <Badge tone={disruptionStatusTone(disruption.status)}>
               {labelize(disruption.status)}
             </Badge>
-          </div>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-3xl tracking-tight">
-            {disruption.title}
-          </h1>
-          <p className="mt-2 max-w-3xl text-[var(--ink-muted)]">{disruption.description}</p>
-        </div>
-        <ButtonLink href={`/projects/${project.id}/map?disruptionId=${disruption.id}`} variant="secondary">
-          Open dependency map
-        </ButtonLink>
-      </div>
+            <ButtonLink
+              href={`/projects/${project.id}/map?disruptionId=${disruption.id}`}
+              variant="secondary"
+            >
+              Dependency map
+            </ButtonLink>
+          </>
+        }
+      />
 
-      <div className="mb-6 grid gap-4 lg:grid-cols-3">
-        <Card className="lg:col-span-2">
-          <CardHeader title="Evidence documents" description="Notices and agreements attached to this disruption" />
-          <CardBody className="space-y-2">
-            {disruption.documents.length === 0 ? (
-              <p className="text-sm text-[var(--ink-muted)]">No documents uploaded.</p>
-            ) : (
-              disruption.documents.map((doc) => (
+      <Card className="kinta-rise kinta-rise-delay-1 mb-6 mt-6">
+        <CardHeader
+          title="Evidence on file"
+          description="Notices and agreements attached to this disruption"
+        />
+        <CardBody className="space-y-2">
+          {disruption.documents.length === 0 ? (
+            <p className="text-sm text-[var(--ink-muted)]">No documents uploaded.</p>
+          ) : (
+            <div className="grid gap-2 md:grid-cols-2">
+              {disruption.documents.map((doc) => (
                 <div
                   key={doc.id}
-                  className="rounded-xl border border-[var(--line)] px-3 py-2 text-sm"
+                  className="rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-3 py-3 text-sm"
                 >
                   <p className="font-medium">{doc.filename}</p>
-                  <p className="text-[var(--ink-muted)]">
-                    {labelize(doc.type)} · extracted{" "}
-                    {doc.extractedText ? `${doc.extractedText.slice(0, 80)}…` : "none"}
+                  <p className="mt-1 text-[var(--ink-muted)]">
+                    {labelize(doc.type)} ·{" "}
+                    {doc.extractedText
+                      ? `${doc.extractedText.slice(0, 90)}…`
+                      : "no extracted text"}
                   </p>
                 </div>
-              ))
-            )}
-          </CardBody>
-        </Card>
-        <Card>
-          <CardHeader title="Workflow" description="Frozen API contract path" />
-          <CardBody>
-            <ol className="space-y-2 text-sm text-[var(--ink)]">
-              <li>1. Analyze event</li>
-              <li>2. Analyze dependencies</li>
-              <li>3. Generate recovery plans</li>
-              <li>4. Recalculate + approve actions</li>
-              <li>5. PayPal refund when required</li>
-            </ol>
-          </CardBody>
-        </Card>
-      </div>
+              ))}
+            </div>
+          )}
+        </CardBody>
+      </Card>
 
       <DisruptionWorkbench
         projectId={project.id}

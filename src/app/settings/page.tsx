@@ -1,6 +1,8 @@
 import { connection } from "next/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import { PageHeader } from "@/components/ui/PageHeader";
+import { TechStatusPanel } from "@/components/system/TechStatusPanel";
 import { getWorkspaceContext } from "@/lib/workspace";
 import { getPublicPayPalConfig } from "@/services/paypal/client";
 
@@ -13,12 +15,15 @@ export default async function SettingsPage() {
 
   return (
     <AppShell title="Settings" projectId={project?.id} projectName={project?.name}>
-      <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
-        Settings
-      </h1>
-      <p className="mt-1 text-sm text-[var(--ink-muted)]">
-        Demo workspace configuration (no auth productization yet).
-      </p>
+      <PageHeader
+        eyebrow="Workspace"
+        title="Settings"
+        description="Demo workspace configuration. Integrations stay visible for judges without cluttering the product home."
+      />
+
+      <div className="mt-6">
+        <TechStatusPanel />
+      </div>
 
       <div className="mt-6 grid gap-6 lg:grid-cols-2">
         <Card>

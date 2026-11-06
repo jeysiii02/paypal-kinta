@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
+import { PageHeader } from "@/components/ui/PageHeader";
 import { Stat } from "@/components/ui/Stat";
 import { ProjectActions } from "@/components/projects/ProjectActions";
 import { formatDateTime } from "@/lib/datetime";
@@ -51,24 +52,16 @@ export default async function ProjectPage({ params }: Props) {
   const latestDisruption = project.disruptions[0];
 
   return (
-    <AppShell projectId={project.id} projectName={project.name}>
-      <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-        <div>
-          <div className="flex flex-wrap items-center gap-2">
+    <AppShell title="Project" projectId={project.id} projectName={project.name}>
+      <PageHeader
+        eyebrow={project.location}
+        title={project.name}
+        description={project.description ?? undefined}
+        actions={
+          <>
             <Badge tone={projectStatusTone(project.status)}>
               {labelize(project.status)}
             </Badge>
-            <span className="text-sm text-[var(--ink-muted)]">{project.location}</span>
-          </div>
-          <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-tight text-[var(--ink)]">
-            {project.name}
-          </h1>
-          <p className="mt-2 max-w-2xl text-[var(--ink-muted)]">
-            {project.description}
-          </p>
-        </div>
-        <div className="flex flex-col items-stretch gap-3 sm:items-end">
-          <div className="flex flex-wrap gap-2">
             <ButtonLink href={`/projects/${project.id}/map`} variant="secondary">
               Dependency map
             </ButtonLink>
@@ -84,13 +77,16 @@ export default async function ProjectPage({ params }: Props) {
                 Report disruption
               </ButtonLink>
             )}
-          </div>
-          <ProjectActions
-            projectId={project.id}
-            projectName={project.name}
-            isActive
-          />
-        </div>
+          </>
+        }
+      />
+
+      <div className="mt-4">
+        <ProjectActions
+          projectId={project.id}
+          projectName={project.name}
+          isActive
+        />
       </div>
 
       <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -98,6 +94,7 @@ export default async function ProjectPage({ params }: Props) {
           label="Budget"
           value={formatPhp(project.budget)}
           hint={`${project.expectedAttendees} expected attendees`}
+          accent="ink"
         />
         <Stat
           label="Commitments"
