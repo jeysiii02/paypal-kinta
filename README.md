@@ -45,7 +45,7 @@ Developer 2 starts after backend handover.
 | **1** | Project setup, Prisma schema, migrations, University Tech Summit seed | ✅ Done |
 | **2** | Project / supplier / commitment / expense APIs | ✅ Done |
 | **3** | Disruption reporting, PDF text extraction, AI event analysis | ✅ Done |
-| **4** | Dependency analysis engine | Pending |
+| **4** | Dependency analysis engine | ✅ Done |
 | **5** | AI recovery plan generation | Pending |
 | **6** | Deterministic financial simulation engine | Pending |
 | **7** | Recovery action APIs + activity logging | Pending |

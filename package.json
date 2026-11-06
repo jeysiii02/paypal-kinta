@@ -15,6 +15,8 @@
     "verify:seed": "tsx scripts/verify-seed.ts",
     "verify:phase2": "tsx scripts/verify-phase2.ts",
     "verify:phase3": "tsx scripts/verify-phase3.ts",
+    "verify:phase4": "tsx scripts/verify-phase4.ts",
+    "test:dependency": "tsx tests/dependency-engine.test.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
