@@ -142,7 +142,7 @@ export function ScenarioSimulator({ scenarios }: Props) {
             onClick={() => onSelect(scenario.id)}
             className={`rounded-xl border px-3 py-2 text-sm font-semibold transition ${
               scenario.id === selected.id
-                ? "border-[var(--ink)] bg-[var(--ink)] text-white"
+                ? "border-[var(--ink)] bg-[var(--ink)] text-[#ffffff]"
                 : "border-[var(--line)] bg-white text-[var(--ink-muted)] hover:border-[var(--line-strong)]"
             }`}
           >

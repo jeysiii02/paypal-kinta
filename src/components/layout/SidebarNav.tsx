@@ -115,7 +115,7 @@ export function SidebarNav({ context }: { context: NavContext }) {
     <div className="flex h-full flex-col">
       <div className="border-b border-[var(--line)] px-4 py-4">
         <Link href="/dashboard" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
-          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ink)] text-sm font-bold text-white">
+          <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ink)] text-sm font-bold text-[#ffffff]">
             K
           </span>
           <div>
