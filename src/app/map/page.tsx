@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
-import { getDemoContext } from "@/lib/demo";
+import { getWorkspaceContext } from "@/lib/workspace";
 import { prisma } from "@/lib/prisma";
 
 export const instant = false;
@@ -8,7 +8,7 @@ export const instant = false;
 /** Convenience route → active project's dependency map. */
 export default async function MapRedirectPage() {
   await connection();
-  const { project } = await getDemoContext();
+  const { project } = await getWorkspaceContext();
   if (!project) {
     redirect("/projects");
   }

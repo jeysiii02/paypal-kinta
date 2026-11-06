@@ -4,14 +4,14 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { ScenarioSimulator } from "@/components/simulator/ScenarioSimulator";
-import { getDemoContext } from "@/lib/demo";
+import { getWorkspaceContext } from "@/lib/workspace";
 import { getRecoveryPlan, listRecoveryPlans } from "@/services/recoveryPlans";
 
 export const instant = false;
 
 export default async function SimulatorPage() {
   await connection();
-  const { project } = await getDemoContext();
+  const { project } = await getWorkspaceContext();
 
   if (!project) {
     return (
@@ -25,7 +25,7 @@ export default async function SimulatorPage() {
   const latest = plans[0] ? await getRecoveryPlan(plans[0].id) : null;
 
   return (
-    <AppShell title="Financial Simulator">
+    <AppShell title="Financial Simulator" projectId={project.id} projectName={project.name}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">

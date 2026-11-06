@@ -15,8 +15,8 @@ export function toPesos(centavos: number): number {
 
 /** Format centavos as a PHP display string, e.g. "₱15,000.00" */
 export function formatPhp(centavos: number): string {
-  return `₱${toPesos(centavos).toLocaleString("en-PH", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  })}`;
+  // Deterministic grouping avoids Node vs browser locale hydration mismatches.
+  const [whole, fraction = "00"] = toPesos(centavos).toFixed(2).split(".");
+  const grouped = whole.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `₱${grouped}.${fraction}`;
 }

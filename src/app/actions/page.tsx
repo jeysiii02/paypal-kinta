@@ -4,14 +4,14 @@ import { ActionCenterClient } from "@/components/actions/ActionCenterClient";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { getDemoContext } from "@/lib/demo";
+import { getWorkspaceContext } from "@/lib/workspace";
 import { listRecoveryActions } from "@/services/recoveryActions";
 
 export const instant = false;
 
 export default async function ActionsPage() {
   await connection();
-  const { project } = await getDemoContext();
+  const { project } = await getWorkspaceContext();
 
   if (!project) {
     return (
@@ -24,7 +24,7 @@ export default async function ActionsPage() {
   const actions = await listRecoveryActions(project.id);
 
   return (
-    <AppShell title="Action Center">
+    <AppShell title="Action Center" projectId={project.id} projectName={project.name}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">

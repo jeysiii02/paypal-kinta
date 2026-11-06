@@ -7,6 +7,8 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Stat } from "@/components/ui/Stat";
+import { ProjectActions } from "@/components/projects/ProjectActions";
+import { formatDateTime } from "@/lib/datetime";
 import { formatPhp } from "@/lib/money";
 import {
   commitmentStatusTone,
@@ -65,22 +67,29 @@ export default async function ProjectPage({ params }: Props) {
             {project.description}
           </p>
         </div>
-        <div className="flex flex-wrap gap-2">
-          <ButtonLink href={`/projects/${project.id}/map`} variant="secondary">
-            Dependency map
-          </ButtonLink>
-          <ButtonLink href={`/projects/${project.id}/payments`} variant="secondary">
-            Payments
-          </ButtonLink>
-          {latestDisruption ? (
-            <ButtonLink href={`/projects/${project.id}/disruptions/${latestDisruption.id}`}>
-              Open disruption flow
+        <div className="flex flex-col items-stretch gap-3 sm:items-end">
+          <div className="flex flex-wrap gap-2">
+            <ButtonLink href={`/projects/${project.id}/map`} variant="secondary">
+              Dependency map
             </ButtonLink>
-          ) : (
-            <ButtonLink href={`/projects/${project.id}/disruptions/new`}>
-              Report disruption
+            <ButtonLink href={`/projects/${project.id}/payments`} variant="secondary">
+              Payments
             </ButtonLink>
-          )}
+            {latestDisruption ? (
+              <ButtonLink href={`/projects/${project.id}/disruptions/${latestDisruption.id}`}>
+                Open disruption flow
+              </ButtonLink>
+            ) : (
+              <ButtonLink href={`/projects/${project.id}/disruptions/new`}>
+                Report disruption
+              </ButtonLink>
+            )}
+          </div>
+          <ProjectActions
+            projectId={project.id}
+            projectName={project.name}
+            isActive
+          />
         </div>
       </div>
 
@@ -184,7 +193,7 @@ export default async function ProjectPage({ params }: Props) {
                         </p>
                       </div>
                       <span className="text-xs text-[var(--ink-muted)]">
-                        {new Date(disruption.reportedAt).toLocaleString("en-PH")}
+                        {formatDateTime(disruption.reportedAt)}
                       </span>
                     </div>
                   </Link>
@@ -237,7 +246,7 @@ export default async function ProjectPage({ params }: Props) {
                     <p className="text-sm text-[var(--ink)]">{item.message}</p>
                     <p className="mt-1 text-xs text-[var(--ink-muted)]">
                       {labelize(item.action)} ·{" "}
-                      {new Date(item.createdAt).toLocaleString("en-PH")}
+                      {formatDateTime(item.createdAt)}
                     </p>
                   </div>
                 ))

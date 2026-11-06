@@ -11,9 +11,9 @@ export async function getDemoContext() {
     throw new Error("No demo users found. Run `npx prisma db seed`.");
   }
 
+  // Newest first — cookie/workspace layer picks the active project.
   const projects = await listProjects({ userId: user.id });
-  const project =
-    projects.find((item) => item.name === "University Tech Summit") ?? projects[0];
+  const project = projects[0] ?? null;
 
   return { user, projects, project };
 }

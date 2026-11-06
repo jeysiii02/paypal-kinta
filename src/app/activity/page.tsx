@@ -2,7 +2,8 @@ import { connection } from "next/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { getDemoContext } from "@/lib/demo";
+import { getWorkspaceContext } from "@/lib/workspace";
+import { formatDateTime } from "@/lib/datetime";
 import { labelize } from "@/lib/status";
 import { listActivityByProject } from "@/services/activity";
 
@@ -10,7 +11,7 @@ export const instant = false;
 
 export default async function ActivityPage() {
   await connection();
-  const { project } = await getDemoContext();
+  const { project } = await getWorkspaceContext();
 
   if (!project) {
     return (
@@ -23,7 +24,7 @@ export default async function ActivityPage() {
   const logs = await listActivityByProject(project.id, { limit: 100 });
 
   return (
-    <AppShell title="Activity Log">
+    <AppShell title="Activity Log" projectId={project.id} projectName={project.name}>
       <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
         Activity Log
       </h1>
@@ -46,7 +47,7 @@ export default async function ActivityPage() {
                 <p className="mt-1 text-xs text-[var(--ink-muted)]">
                   {labelize(item.action)} · {item.entityType}
                   {item.entityId ? ` · ${item.entityId.slice(0, 10)}…` : ""} ·{" "}
-                  {new Date(item.createdAt).toLocaleString("en-PH")}
+                  {formatDateTime(item.createdAt)}
                 </p>
               </div>
             ))

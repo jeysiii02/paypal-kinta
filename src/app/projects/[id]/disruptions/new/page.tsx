@@ -12,7 +12,7 @@ export default async function NewDisruptionPage({ params }: Props) {
   const { id } = await params;
 
   return (
-    <AppShell>
+    <AppShell projectId={id}>
       <Suspense fallback={<p className="text-sm text-[var(--ink-muted)]">Loading form…</p>}>
         <NewDisruptionForm projectId={id} />
       </Suspense>

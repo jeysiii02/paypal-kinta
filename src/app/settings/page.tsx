@@ -1,18 +1,18 @@
 import { connection } from "next/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
-import { getDemoContext } from "@/lib/demo";
+import { getWorkspaceContext } from "@/lib/workspace";
 import { getPublicPayPalConfig } from "@/services/paypal/client";
 
 export const instant = false;
 
 export default async function SettingsPage() {
   await connection();
-  const { user, project } = await getDemoContext();
+  const { user, project } = await getWorkspaceContext();
   const paypal = getPublicPayPalConfig();
 
   return (
-    <AppShell title="Settings">
+    <AppShell title="Settings" projectId={project?.id} projectName={project?.name}>
       <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
         Settings
       </h1>

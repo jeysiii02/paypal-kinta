@@ -1,27 +1,42 @@
-import { getDemoContext } from "@/lib/demo";
 import { MobileTopBar, SidebarNav } from "@/components/layout/SidebarNav";
+import { getWorkspaceContext } from "@/lib/workspace";
 
 export async function AppShell({
   children,
   title,
+  projectId,
+  projectName,
 }: {
   children: React.ReactNode;
-  /** Optional mobile subtitle */
   title?: string;
-  /** Kept for backward compatibility with older pages */
-  projectName?: string;
+  /** Prefer this project as active (current project detail route). */
   projectId?: string;
+  projectName?: string;
 }) {
-  const { user, project } = await getDemoContext();
+  const { user, projects, project } = await getWorkspaceContext(projectId);
+
+  // Prefer the resolved workspace project so a stale prop cannot desync the switcher.
+  const activeId = project?.id ?? projectId ?? null;
+  const activeName =
+    project?.name ??
+    projectName ??
+    (activeId
+      ? (projects.find((item) => item.id === activeId)?.name ?? null)
+      : null);
 
   return (
     <div className="min-h-screen bg-[var(--paper)] lg:flex">
       <SidebarNav
         context={{
-          projectId: project?.id ?? null,
-          projectName: project?.name ?? null,
+          projectId: activeId,
+          projectName: activeName,
           userName: user.name,
           userEmail: user.email,
+          projects: projects.map((item) => ({
+            id: item.id,
+            name: item.name,
+            status: item.status,
+          })),
         }}
       />
       <div className="min-w-0 flex-1">

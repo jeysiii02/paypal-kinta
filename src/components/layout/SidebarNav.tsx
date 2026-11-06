@@ -1,11 +1,12 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
 import {
   Activity,
   Banknote,
   Boxes,
+  ChevronDown,
   ClipboardList,
   FolderKanban,
   GitBranch,
@@ -18,13 +19,15 @@ import {
   Wallet,
   X,
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useTransition } from "react";
+import { setActiveProject } from "@/lib/actions/workspace";
 
 export type NavContext = {
   projectId: string | null;
   projectName: string | null;
   userName: string;
   userEmail: string;
+  projects: Array<{ id: string; name: string; status: string }>;
 };
 
 type NavItem = {
@@ -52,7 +55,7 @@ function section(
         const Icon = item.icon;
         return (
           <Link
-            key={item.href}
+            key={item.href + item.label}
             href={item.href}
             onClick={onNavigate}
             className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition ${
@@ -74,7 +77,9 @@ function section(
 
 export function SidebarNav({ context }: { context: NavContext }) {
   const pathname = usePathname();
+  const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [pending, startTransition] = useTransition();
   const pid = context.projectId;
 
   const workspace: NavItem[] = [
@@ -111,10 +116,27 @@ export function SidebarNav({ context }: { context: NavContext }) {
     { href: "/activity", label: "Activity Log", icon: Activity },
   ];
 
+  function onSwitchProject(nextId: string) {
+    if (!nextId || nextId === context.projectId) return;
+    startTransition(async () => {
+      // Project-scoped routes must navigate; workspace pages refresh in place.
+      if (pathname.startsWith("/projects/")) {
+        await setActiveProject(nextId, `/projects/${nextId}`);
+        return;
+      }
+      await setActiveProject(nextId);
+      router.refresh();
+    });
+  }
+
   const navBody = (
     <div className="flex h-full flex-col">
       <div className="border-b border-[var(--line)] px-4 py-4">
-        <Link href="/dashboard" className="flex items-center gap-2.5" onClick={() => setOpen(false)}>
+        <Link
+          href="/dashboard"
+          className="flex items-center gap-2.5"
+          onClick={() => setOpen(false)}
+        >
           <span className="inline-flex h-9 w-9 items-center justify-center rounded-xl bg-[var(--ink)] text-sm font-bold text-[#ffffff]">
             K
           </span>
@@ -127,16 +149,41 @@ export function SidebarNav({ context }: { context: NavContext }) {
             </p>
           </div>
         </Link>
-        {context.projectName ? (
-          <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-3 py-2">
-            <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
-              Active project
-            </p>
-            <p className="mt-0.5 truncate text-sm font-semibold text-[var(--ink)]">
-              {context.projectName}
-            </p>
-          </div>
-        ) : null}
+
+        <div className="mt-4 rounded-xl border border-[var(--line)] bg-[var(--surface-2)] px-3 py-2">
+          <p className="text-[10px] uppercase tracking-[0.14em] text-[var(--ink-muted)]">
+            Active project
+          </p>
+          {context.projects.length === 0 ? (
+            <p className="mt-1 text-sm text-[var(--ink-muted)]">No projects</p>
+          ) : (
+            <div className="relative mt-1">
+              <select
+                className="w-full appearance-none rounded-lg border border-[var(--line)] bg-white py-2 pl-2.5 pr-8 text-sm font-semibold text-[var(--ink)]"
+                value={context.projectId ?? ""}
+                disabled={pending}
+                onChange={(event) => onSwitchProject(event.target.value)}
+                aria-label="Switch active project"
+              >
+                {context.projects.map((project) => (
+                  <option key={project.id} value={project.id}>
+                    {project.name}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2 top-1/2 h-4 w-4 -translate-y-1/2 text-[var(--ink-muted)]" />
+            </div>
+          )}
+          {context.projectId ? (
+            <Link
+              href={`/projects/${context.projectId}`}
+              onClick={() => setOpen(false)}
+              className="mt-2 inline-block text-xs font-semibold text-[var(--teal)] hover:underline"
+            >
+              Open project →
+            </Link>
+          ) : null}
+        </div>
       </div>
 
       <div className="flex-1 space-y-6 overflow-y-auto px-3 py-4">

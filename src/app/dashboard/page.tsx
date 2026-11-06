@@ -7,7 +7,8 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Stat } from "@/components/ui/Stat";
-import { getDemoContext } from "@/lib/demo";
+import { getWorkspaceContext } from "@/lib/workspace";
+import { formatDateShort, formatDateTime } from "@/lib/datetime";
 import { formatPhp } from "@/lib/money";
 import {
   actionStatusTone,
@@ -22,7 +23,7 @@ export const instant = false;
 
 export default async function DashboardPage() {
   await connection();
-  const { user, projects, project } = await getDemoContext();
+  const { user, projects, project } = await getWorkspaceContext();
 
   const activeCount = projects.filter((p) =>
     ["ACTIVE", "RECOVERING", "DISRUPTED"].includes(p.status),
@@ -62,7 +63,7 @@ export default async function DashboardPage() {
     ]);
 
   return (
-    <AppShell title="Dashboard">
+    <AppShell title="Dashboard" projectId={project?.id} projectName={project?.name}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--teal)]">
@@ -142,12 +143,8 @@ export default async function DashboardPage() {
                       </div>
                       <p className="mt-1 text-sm text-[var(--ink-muted)]">
                         {item.location} ·{" "}
-                        {new Date(item.eventDate).toLocaleDateString("en-PH", {
-                          year: "numeric",
-                          month: "short",
-                          day: "numeric",
-                        })}{" "}
-                        · {item.expectedAttendees} attendees
+                        {formatDateShort(item.eventDate)} ·{" "}
+                        {item.expectedAttendees} attendees
                       </p>
                     </div>
                     <p className="font-semibold text-[var(--ink)]">
@@ -228,11 +225,7 @@ export default async function DashboardPage() {
                       </p>
                     </div>
                     <p className="text-xs font-medium text-[var(--ink)]">
-                      {new Date(item.eventDate).toLocaleDateString("en-PH", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                      })}
+                      {formatDateShort(item.eventDate)}
                     </p>
                   </Link>
                 ))
@@ -264,7 +257,7 @@ export default async function DashboardPage() {
                 <p className="text-sm text-[var(--ink)]">{item.message}</p>
                 <p className="mt-1 text-xs text-[var(--ink-muted)]">
                   {labelize(item.action)} ·{" "}
-                  {new Date(item.createdAt).toLocaleString("en-PH")}
+                  {formatDateTime(item.createdAt)}
                 </p>
               </div>
             ))

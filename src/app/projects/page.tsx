@@ -6,7 +6,9 @@ import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { getDemoContext } from "@/lib/demo";
+import { ProjectActions } from "@/components/projects/ProjectActions";
+import { getWorkspaceContext } from "@/lib/workspace";
+import { formatDate } from "@/lib/datetime";
 import { formatPhp } from "@/lib/money";
 import { labelize, projectStatusTone } from "@/lib/status";
 
@@ -14,17 +16,17 @@ export const instant = false;
 
 export default async function ProjectsPage() {
   await connection();
-  const { projects } = await getDemoContext();
+  const { projects, project: active } = await getWorkspaceContext();
 
   return (
-    <AppShell title="Projects">
+    <AppShell title="Projects" projectId={active?.id} projectName={active?.name}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
             Projects
           </h1>
           <p className="mt-1 text-sm text-[var(--ink-muted)]">
-            All workspace projects from the database.
+            Switch the active project from the sidebar, or open/edit/archive here.
           </p>
         </div>
         <ButtonLink href="/projects/new">
@@ -34,7 +36,7 @@ export default async function ProjectsPage() {
       </div>
 
       <Card className="mt-6">
-        <CardHeader title="Project list" description={`${projects.length} total`} />
+        <CardHeader title="Project list" description={`${projects.length} active`} />
         <CardBody className="space-y-3">
           {projects.length === 0 ? (
             <EmptyState
@@ -51,6 +53,7 @@ export default async function ProjectsPage() {
                     <th className="px-2 py-2 font-semibold">Location</th>
                     <th className="px-2 py-2 font-semibold">Budget</th>
                     <th className="px-2 py-2 font-semibold">Status</th>
+                    <th className="px-2 py-2 font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -66,9 +69,14 @@ export default async function ProjectsPage() {
                         >
                           {project.name}
                         </Link>
+                        {active?.id === project.id ? (
+                          <span className="ml-2 text-[10px] font-semibold uppercase tracking-wide text-[var(--teal)]">
+                            Active
+                          </span>
+                        ) : null}
                       </td>
                       <td className="px-2 py-3 text-[var(--ink-muted)]">
-                        {new Date(project.eventDate).toLocaleDateString("en-PH")}
+                        {formatDate(project.eventDate)}
                       </td>
                       <td className="px-2 py-3 text-[var(--ink-muted)]">
                         {project.location}
@@ -80,6 +88,14 @@ export default async function ProjectsPage() {
                         <Badge tone={projectStatusTone(project.status)}>
                           {labelize(project.status)}
                         </Badge>
+                      </td>
+                      <td className="px-2 py-3">
+                        <ProjectActions
+                          projectId={project.id}
+                          projectName={project.name}
+                          compact
+                          isActive={active?.id === project.id}
+                        />
                       </td>
                     </tr>
                   ))}

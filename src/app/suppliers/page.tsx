@@ -1,11 +1,11 @@
-import Link from "next/link";
+﻿import Link from "next/link";
 import { connection } from "next/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { getDemoContext } from "@/lib/demo";
+import { getWorkspaceContext } from "@/lib/workspace";
 import { labelize } from "@/lib/status";
 import { listSuppliers } from "@/services/suppliers";
 
@@ -13,7 +13,7 @@ export const instant = false;
 
 export default async function SuppliersPage() {
   await connection();
-  const { project } = await getDemoContext();
+  const { project } = await getWorkspaceContext();
 
   if (!project) {
     return (
@@ -29,7 +29,7 @@ export default async function SuppliersPage() {
   const suppliers = await listSuppliers(project.id);
 
   return (
-    <AppShell title="Suppliers">
+    <AppShell title="Suppliers" projectId={project.id} projectName={project.name}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">

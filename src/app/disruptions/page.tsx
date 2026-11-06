@@ -6,7 +6,8 @@ import { Badge } from "@/components/ui/Badge";
 import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
-import { getDemoContext } from "@/lib/demo";
+import { getWorkspaceContext } from "@/lib/workspace";
+import { formatDateTime } from "@/lib/datetime";
 import { disruptionStatusTone, labelize } from "@/lib/status";
 import { listDisruptions } from "@/services/disruptions";
 
@@ -14,7 +15,7 @@ export const instant = false;
 
 export default async function DisruptionsPage() {
   await connection();
-  const { project } = await getDemoContext();
+  const { project } = await getWorkspaceContext();
 
   if (!project) {
     return (
@@ -27,7 +28,7 @@ export default async function DisruptionsPage() {
   const disruptions = await listDisruptions(project.id);
 
   return (
-    <AppShell title="Disruptions">
+    <AppShell title="Disruptions" projectId={project.id} projectName={project.name}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
@@ -77,7 +78,7 @@ export default async function DisruptionsPage() {
                     </p>
                   </div>
                   <span className="text-xs text-[var(--ink-muted)]">
-                    {new Date(disruption.reportedAt).toLocaleString("en-PH")}
+                    {formatDateTime(disruption.reportedAt)}
                   </span>
                 </div>
               </Link>

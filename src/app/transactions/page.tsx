@@ -5,7 +5,8 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Badge } from "@/components/ui/Badge";
-import { getDemoContext } from "@/lib/demo";
+import { getWorkspaceContext } from "@/lib/workspace";
+import { formatDateTime } from "@/lib/datetime";
 import { formatPhp } from "@/lib/money";
 import { labelize, paymentStatusTone } from "@/lib/status";
 import { getProject } from "@/services/projects";
@@ -15,7 +16,7 @@ export const instant = false;
 
 export default async function TransactionsPage() {
   await connection();
-  const { project: summary } = await getDemoContext();
+  const { project: summary } = await getWorkspaceContext();
 
   if (!summary) {
     return (
@@ -33,7 +34,7 @@ export default async function TransactionsPage() {
   });
 
   return (
-    <AppShell title="Transactions">
+    <AppShell title="Transactions" projectId={project.id} projectName={project.name}>
       <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
         <div>
           <h1 className="font-[family-name:var(--font-display)] text-3xl text-[var(--ink)]">
@@ -89,7 +90,7 @@ export default async function TransactionsPage() {
                       {payment.paypalCaptureId ?? "—"}
                     </td>
                     <td className="px-2 py-3 text-xs text-[var(--ink-muted)]">
-                      {new Date(payment.createdAt).toLocaleString("en-PH")}
+                      {formatDateTime(payment.createdAt)}
                     </td>
                   </tr>
                 ))}
