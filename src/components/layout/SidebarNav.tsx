@@ -57,11 +57,13 @@ function section(
             onClick={onNavigate}
             className={`flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition ${
               active
-                ? "bg-[var(--ink)] font-semibold text-white shadow-[var(--shadow-sm)]"
+                ? "bg-[var(--ink)] font-semibold text-[#ffffff] shadow-[var(--shadow-sm)]"
                 : "text-[var(--ink-muted)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)]"
             }`}
           >
-            <Icon className="h-4 w-4 shrink-0 opacity-90" />
+            <Icon
+              className={`h-4 w-4 shrink-0 ${active ? "text-[#ffffff]" : "opacity-90"}`}
+            />
             {item.label}
           </Link>
         );
@@ -149,11 +151,13 @@ export function SidebarNav({ context }: { context: NavContext }) {
           onClick={() => setOpen(false)}
           className={`mb-2 flex items-center gap-2.5 rounded-xl px-3 py-2 text-sm transition ${
             pathname === "/settings"
-              ? "bg-[var(--ink)] font-semibold text-white"
+              ? "bg-[var(--ink)] font-semibold text-[#ffffff]"
               : "text-[var(--ink-muted)] hover:bg-[var(--paper-2)] hover:text-[var(--ink)]"
           }`}
         >
-          <Settings className="h-4 w-4" />
+          <Settings
+            className={`h-4 w-4 ${pathname === "/settings" ? "text-[#ffffff]" : ""}`}
+          />
           Settings
         </Link>
         <div className="rounded-xl border border-[var(--line)] bg-white px-3 py-2">
