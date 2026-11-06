@@ -45,7 +45,7 @@ export function getPublicPayPalConfig() {
     currency,
     brandName,
     intent: "CAPTURE" as const,
-    baseUrl: mode === "live" ? baseUrl : null,
+    baseUrl,
     sdkEnabled: mode === "live" && Boolean(clientId),
   };
 }
