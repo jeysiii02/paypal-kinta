@@ -4,6 +4,7 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  serverExternalPackages: ["pdf-parse", "@napi-rs/canvas"],
   turbopack: {
     rules: {
       "*.css": {

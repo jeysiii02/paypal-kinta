@@ -44,7 +44,7 @@ Developer 2 starts after backend handover.
 |---|---|---|
 | **1** | Project setup, Prisma schema, migrations, University Tech Summit seed | ✅ Done |
 | **2** | Project / supplier / commitment / expense APIs | ✅ Done |
-| **3** | Disruption reporting, PDF text extraction, AI event analysis | Pending |
+| **3** | Disruption reporting, PDF text extraction, AI event analysis | ✅ Done |
 | **4** | Dependency analysis engine | Pending |
 | **5** | AI recovery plan generation | Pending |
 | **6** | Deterministic financial simulation engine | Pending |
@@ -95,8 +95,9 @@ Copy `.env.example` → `.env`:
 ```env
 DATABASE_URL="file:./dev.db"
 
+AI_PROVIDER="gemini"
 AI_API_KEY=""
-AI_MODEL=""
+AI_MODEL="gemini-2.0-flash"
 
 PAYPAL_CLIENT_ID=""
 PAYPAL_CLIENT_SECRET=""
@@ -104,7 +105,7 @@ PAYPAL_BASE_URL="https://api-m.sandbox.paypal.com"
 PAYPAL_WEBHOOK_ID=""
 ```
 
-- **AI_*** — used by Developer 1 for Gemini (or another provider)  
+- **AI_PROVIDER** — `gemini` (requires `AI_API_KEY`) or `heuristic` (offline deterministic extraction for local demo)  
 - **PAYPAL_*** — reserved for Developer 2; do not commit real credentials  
 
 ---

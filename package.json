@@ -14,14 +14,17 @@
     "db:studio": "prisma studio",
     "verify:seed": "tsx scripts/verify-seed.ts",
     "verify:phase2": "tsx scripts/verify-phase2.ts",
+    "verify:phase3": "tsx scripts/verify-phase3.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
   "dependencies": {
+    "@google/generative-ai": "^0.24.1",
     "@prisma/client": "6.19.3",
     "next": "16.4.5",
+    "pdf-parse": "^2.4.5",
     "prisma": "6.19.3",
     "react": "19.3.0",
     "react-dom": "19.3.0",
@@ -30,6 +33,7 @@
   "devDependencies": {
     "@tailwindcss/turbopack": "^4",
     "@types/node": "^20",
+    "@types/pdf-parse": "^1.1.5",
     "@types/react": "^19",
     "@types/react-dom": "^19",
     "eslint": "^9",
