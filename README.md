@@ -50,8 +50,10 @@ Developer 2 starts after backend handover.
 | **6** | Deterministic financial simulation engine | ✅ Done |
 | **7** | Recovery action APIs + activity logging | ✅ Done |
 | **8** | Tests, API documentation, handover guide | ✅ Done |
+| **9** | Dashboard UI, React Flow, charts, disruption workbench | ✅ Done (Dev 2) |
+| **10** | PayPal Orders / Capture / Refunds / Webhooks | ✅ Done (Dev 2) |
 
-**Developer 1 backend is complete.** See [`HANDOVER.md`](HANDOVER.md) and [`docs/API.md`](docs/API.md).
+**Developer 1 backend is complete.** Developer 2 frontend + PayPal are wired. See [`HANDOVER.md`](HANDOVER.md) and [`docs/API.md`](docs/API.md).
 
 ---
 
@@ -107,10 +109,13 @@ PAYPAL_CLIENT_ID=""
 PAYPAL_CLIENT_SECRET=""
 PAYPAL_BASE_URL="https://api-m.sandbox.paypal.com"
 PAYPAL_WEBHOOK_ID=""
+PAYPAL_MOCK="true"
+NEXT_PUBLIC_PAYPAL_CLIENT_ID=""
 ```
 
 - **AI_PROVIDER** — `gemini` (requires `AI_API_KEY`) or `heuristic` (offline deterministic extraction for local demo)  
-- **PAYPAL_*** — reserved for Developer 2; do not commit real credentials  
+- **PAYPAL_*** — Sandbox credentials for live PayPal calls; leave empty / set `PAYPAL_MOCK=true` for local mock Orders→Capture→Refunds  
+- Do not commit real credentials
 
 ---
 

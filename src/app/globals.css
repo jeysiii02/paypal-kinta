@@ -1,26 +1,94 @@
 @import "tailwindcss";
+@import "@xyflow/react/dist/style.css";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --ink: #0b1f33;
+  --ink-soft: #1c3348;
+  --ink-muted: #5b6f82;
+  --paper: #f3f6f9;
+  --paper-2: #e8eef4;
+  --surface: #ffffff;
+  --surface-2: #f7fafc;
+  --line: #d5dee8;
+  --line-strong: #b7c5d4;
+
+  --teal: #0f766e;
+  --teal-soft: #d9f3ef;
+  --teal-line: #9ad5cd;
+  --amber: #c47a12;
+  --amber-soft: #fff1d6;
+  --amber-line: #f0c57a;
+
+  --info: #1d4f91;
+  --info-soft: #e4eefc;
+  --info-line: #a9c4ea;
+  --good: #176b45;
+  --good-soft: #def5e8;
+  --good-line: #9ed7b8;
+  --warn: #9a5b00;
+  --warn-soft: #fff0d4;
+  --warn-line: #efc47a;
+  --bad: #a1262f;
+  --bad-soft: #fde6e8;
+  --bad-line: #efb0b6;
+
+  --shadow: 0 18px 50px rgba(11, 31, 51, 0.08);
+  --shadow-sm: 0 8px 24px rgba(11, 31, 51, 0.06);
+
+  --background: var(--paper);
+  --foreground: var(--ink);
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --font-sans: var(--font-body);
+  --font-display: var(--font-display);
+  --font-mono: var(--font-mono);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  color: var(--ink);
+  background:
+    radial-gradient(1200px 500px at 10% -10%, rgba(15, 118, 110, 0.12), transparent 55%),
+    radial-gradient(900px 420px at 100% 0%, rgba(196, 122, 18, 0.10), transparent 50%),
+    linear-gradient(180deg, #eef3f7 0%, var(--paper) 42%, #eef2f6 100%);
+  font-family: var(--font-body), "Segoe UI", sans-serif;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+::selection {
+  background: rgba(15, 118, 110, 0.18);
+}
+
+.kinta-grid {
+  background-image:
+    linear-gradient(rgba(11, 31, 51, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(11, 31, 51, 0.035) 1px, transparent 1px);
+  background-size: 28px 28px;
+}
+
+.react-flow__attribution {
+  display: none;
 }
