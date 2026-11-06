@@ -46,10 +46,12 @@ Developer 2 starts after backend handover.
 | **2** | Project / supplier / commitment / expense APIs | ✅ Done |
 | **3** | Disruption reporting, PDF text extraction, AI event analysis | ✅ Done |
 | **4** | Dependency analysis engine | ✅ Done |
-| **5** | AI recovery plan generation | Pending |
-| **6** | Deterministic financial simulation engine | Pending |
-| **7** | Recovery action APIs + activity logging | Pending |
-| **8** | Tests, API documentation, handover guide | Pending |
+| **5** | AI recovery plan generation | ✅ Done |
+| **6** | Deterministic financial simulation engine | ✅ Done |
+| **7** | Recovery action APIs + activity logging | ✅ Done |
+| **8** | Tests, API documentation, handover guide | ✅ Done |
+
+**Developer 1 backend is complete.** See [`HANDOVER.md`](HANDOVER.md) and [`docs/API.md`](docs/API.md).
 
 ---
 
@@ -85,6 +87,8 @@ DB GUI (optional): `npm run db:studio`
 | `npm run db:reset` | Reset DB + re-seed |
 | `npm run db:studio` | Prisma Studio |
 | `npm run build` | Production build |
+| `npm run test:unit` | Dependency + finance unit tests |
+| `npm run verify:phase5-8` | Smoke test recovery plans → actions |
 
 ---
 
@@ -127,10 +131,11 @@ paypal-kinta/
 │   │   └── validators/        # Zod schemas (Phase 2+)
 │   └── services/              # Business logic (Phase 2+)
 ├── tests/
-├── docs/                      # API docs (Phase 8)
+├── docs/API.md                # Frozen API contracts
 ├── uploads/                   # Uploaded PDFs
 ├── .env.example
-└── PHASE1.md                  # Phase 1 handover notes
+├── HANDOVER.md                # Dev 1 → Dev 2 guide
+└── PHASE*.md                  # Per-phase notes
 ```
 
 ---

@@ -16,7 +16,10 @@
     "verify:phase2": "tsx scripts/verify-phase2.ts",
     "verify:phase3": "tsx scripts/verify-phase3.ts",
     "verify:phase4": "tsx scripts/verify-phase4.ts",
+    "verify:phase5-8": "tsx scripts/verify-phase5-8.ts",
     "test:dependency": "tsx tests/dependency-engine.test.ts",
+    "test:finance": "tsx tests/finance-engine.test.ts",
+    "test:unit": "tsx tests/dependency-engine.test.ts && tsx tests/finance-engine.test.ts",
     "postinstall": "prisma generate"
   },
   "prisma": {
