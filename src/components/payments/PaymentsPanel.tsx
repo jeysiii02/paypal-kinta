@@ -5,6 +5,10 @@ import { useEffect, useState, useTransition } from "react";
 import { Badge } from "@/components/ui/Badge";
 import { Button } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
+import {
+  MockCaptureButton,
+  PayPalCheckoutButtons,
+} from "@/components/payments/PayPalCheckoutButtons";
 import { api, ClientApiError } from "@/lib/client-api";
 import { formatPhp } from "@/lib/money";
 import { labelize, paymentStatusTone } from "@/lib/status";
@@ -14,6 +18,8 @@ type PayPalConfig = {
   clientId: string;
   mode: "live" | "mock";
   currency: string;
+  sdkEnabled?: boolean;
+  brandName?: string;
 };
 
 export function PaymentsPanel({
@@ -29,6 +35,7 @@ export function PaymentsPanel({
   const [config, setConfig] = useState<PayPalConfig | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
+  const [orderPreview, setOrderPreview] = useState<string | null>(null);
 
   useEffect(() => {
     api<PayPalConfig>("/api/paypal/config")
@@ -55,7 +62,7 @@ export function PaymentsPanel({
     }
   }
 
-  async function createAndCapture(payment: CustomerPayment) {
+  async function mockCreateAndCapture(payment: CustomerPayment) {
     await run("capture", async () => {
       const created = await api<{
         payment: CustomerPayment;
@@ -84,6 +91,17 @@ export function PaymentsPanel({
     });
   }
 
+  async function inspectOrder(payment: CustomerPayment) {
+    if (!payment.paypalOrderId) return;
+    await run("inspect order", async () => {
+      const order = await api<Record<string, unknown>>(
+        `/api/paypal/orders/${payment.paypalOrderId}`,
+      );
+      setOrderPreview(JSON.stringify(order, null, 2));
+      setMessage(`Loaded Orders v2 details for ${payment.paypalOrderId}`);
+    });
+  }
+
   async function refund(payment: CustomerPayment) {
     await run("refund", async () => {
       const result = await api<{
@@ -107,27 +125,33 @@ export function PaymentsPanel({
     });
   }
 
+  const liveSdk = Boolean(config?.sdkEnabled && config.clientId);
+
   return (
     <div className="space-y-4">
       <Card>
         <CardHeader
-          title="PayPal Sandbox wiring"
-          description="Orders → Capture → Refunds → Webhooks"
+          title="PayPal Developer Platform"
+          description="Orders v2 → JS SDK approve → Capture → Refunds → Webhooks"
           action={
             config ? (
               <Badge tone={config.mode === "mock" ? "warn" : "good"}>
-                {config.mode === "mock" ? "Mock mode" : "Live sandbox"}
+                {config.mode === "mock" ? "Mock mode" : "Live sandbox SDK"}
               </Badge>
             ) : null
           }
         />
         <CardBody className="space-y-2 text-sm text-[var(--ink-muted)]">
           <p>
-            Without `PAYPAL_CLIENT_ID` / `PAYPAL_CLIENT_SECRET`, KINTA runs PayPal
-            flows in mock mode so the recovery demo still completes locally.
+            Live mode uses <code className="font-mono text-xs">@paypal/react-paypal-js</code>{" "}
+            Buttons with server-side order create/capture. Mock mode keeps the demo
+            runnable without credentials.
           </p>
           <p>
-            Webhook inbox: <code className="font-mono text-xs">POST /api/paypal/webhooks</code>
+            APIs:{" "}
+            <code className="font-mono text-xs">
+              /api/paypal/orders · capture · refunds · webhooks · recovery-actions/execute
+            </code>
           </p>
         </CardBody>
       </Card>
@@ -145,51 +169,95 @@ export function PaymentsPanel({
 
       <Card>
         <CardHeader title="Customer payments" description="Seeded demo tickets start as CREATED" />
-        <CardBody className="space-y-3">
+        <CardBody className="space-y-4">
           {payments.map((payment) => (
             <div
               key={payment.id}
-              className="flex flex-col gap-3 rounded-2xl border border-[var(--line)] px-4 py-4 sm:flex-row sm:items-center sm:justify-between"
+              className="rounded-2xl border border-[var(--line)] px-4 py-4"
             >
-              <div>
-                <div className="flex flex-wrap items-center gap-2">
-                  <p className="font-semibold">{payment.customerName}</p>
-                  <Badge tone={paymentStatusTone(payment.status)}>
-                    {labelize(payment.status)}
-                  </Badge>
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold">{payment.customerName}</p>
+                    <Badge tone={paymentStatusTone(payment.status)}>
+                      {labelize(payment.status)}
+                    </Badge>
+                  </div>
+                  <p className="mt-1 text-sm text-[var(--ink-muted)]">
+                    {payment.customerEmail} · {formatPhp(payment.amount)}{" "}
+                    {payment.currency}
+                  </p>
+                  <p className="mt-1 font-mono text-xs text-[var(--ink-muted)]">
+                    order={payment.paypalOrderId ?? "null"} · capture=
+                    {payment.paypalCaptureId ?? "null"}
+                  </p>
                 </div>
-                <p className="mt-1 text-sm text-[var(--ink-muted)]">
-                  {payment.customerEmail} · {formatPhp(payment.amount)} {payment.currency}
-                </p>
-                <p className="mt-1 font-mono text-xs text-[var(--ink-muted)]">
-                  order={payment.paypalOrderId ?? "null"} · capture=
-                  {payment.paypalCaptureId ?? "null"}
-                </p>
-              </div>
-              <div className="flex flex-wrap gap-2">
-                {payment.status === "CREATED" || payment.status === "APPROVED" ? (
-                  <Button
-                    onClick={() => createAndCapture(payment)}
-                    disabled={pending}
-                  >
-                    Create + capture
-                  </Button>
-                ) : null}
-                {payment.status === "CAPTURED" ||
-                payment.status === "PARTIALLY_REFUNDED" ? (
-                  <Button
-                    variant="secondary"
-                    onClick={() => refund(payment)}
-                    disabled={pending}
-                  >
-                    Refund
-                  </Button>
-                ) : null}
+                <div className="flex flex-col items-stretch gap-2 sm:min-w-[240px]">
+                  {(payment.status === "CREATED" || payment.status === "APPROVED") &&
+                  liveSdk ? (
+                    <PayPalCheckoutButtons
+                      projectId={projectId}
+                      payment={payment}
+                      clientId={config!.clientId}
+                      currency={config?.currency || payment.currency || "PHP"}
+                      onCaptured={(updated, captureId) => {
+                        setPayments((current) =>
+                          current.map((item) =>
+                            item.id === payment.id ? updated : item,
+                          ),
+                        );
+                        setMessage(`PayPal JS SDK capture completed: ${captureId}`);
+                        startTransition(() => router.refresh());
+                      }}
+                      onError={setError}
+                    />
+                  ) : null}
+
+                  {(payment.status === "CREATED" || payment.status === "APPROVED") &&
+                  !liveSdk ? (
+                    <MockCaptureButton
+                      onClick={() => mockCreateAndCapture(payment)}
+                      disabled={pending}
+                    />
+                  ) : null}
+
+                  {payment.paypalOrderId ? (
+                    <Button
+                      variant="ghost"
+                      onClick={() => inspectOrder(payment)}
+                      disabled={pending}
+                    >
+                      Inspect order
+                    </Button>
+                  ) : null}
+
+                  {payment.status === "CAPTURED" ||
+                  payment.status === "PARTIALLY_REFUNDED" ? (
+                    <Button
+                      variant="secondary"
+                      onClick={() => refund(payment)}
+                      disabled={pending}
+                    >
+                      Refund capture
+                    </Button>
+                  ) : null}
+                </div>
               </div>
             </div>
           ))}
         </CardBody>
       </Card>
+
+      {orderPreview ? (
+        <Card>
+          <CardHeader title="Orders v2 payload" description="GET /api/paypal/orders/:orderId" />
+          <CardBody>
+            <pre className="overflow-x-auto rounded-xl bg-[var(--ink)] p-4 text-xs text-white">
+              {orderPreview}
+            </pre>
+          </CardBody>
+        </Card>
+      ) : null}
     </div>
   );
 }

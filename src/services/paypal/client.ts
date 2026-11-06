@@ -1,28 +1,74 @@
 import { AppError } from "@/lib/errors";
+import { randomUUID } from "crypto";
 
 export type PayPalMode = "live" | "mock";
 
 export function getPayPalConfig() {
-  const clientId = process.env.PAYPAL_CLIENT_ID?.trim() ?? "";
+  const clientId =
+    process.env.PAYPAL_CLIENT_ID?.trim() ||
+    process.env.NEXT_PUBLIC_PAYPAL_CLIENT_ID?.trim() ||
+    "";
   const clientSecret = process.env.PAYPAL_CLIENT_SECRET?.trim() ?? "";
   const baseUrl =
     process.env.PAYPAL_BASE_URL?.trim() || "https://api-m.sandbox.paypal.com";
   const webhookId = process.env.PAYPAL_WEBHOOK_ID?.trim() ?? "";
+  const currency = (process.env.PAYPAL_CURRENCY?.trim() || "PHP").toUpperCase();
+  const brandName = process.env.PAYPAL_BRAND_NAME?.trim() || "KINTA";
+  const returnUrl =
+    process.env.PAYPAL_RETURN_URL?.trim() ||
+    "http://localhost:3000/dashboard";
+  const cancelUrl =
+    process.env.PAYPAL_CANCEL_URL?.trim() ||
+    "http://localhost:3000/dashboard";
   const forceMock = process.env.PAYPAL_MOCK === "true";
   const mode: PayPalMode =
     forceMock || !clientId || !clientSecret ? "mock" : "live";
 
-  return { clientId, clientSecret, baseUrl, webhookId, mode };
+  return {
+    clientId,
+    clientSecret,
+    baseUrl,
+    webhookId,
+    currency,
+    brandName,
+    returnUrl,
+    cancelUrl,
+    mode,
+  };
 }
 
 export function getPublicPayPalConfig() {
-  const { clientId, mode, baseUrl } = getPayPalConfig();
+  const { clientId, mode, baseUrl, currency, brandName } = getPayPalConfig();
   return {
-    clientId: mode === "mock" ? "mock-client-id" : clientId,
+    clientId: mode === "mock" ? "" : clientId,
     mode,
-    currency: "PHP",
+    currency,
+    brandName,
     intent: "CAPTURE" as const,
-    baseUrl,
+    baseUrl: mode === "live" ? baseUrl : null,
+    sdkEnabled: mode === "live" && Boolean(clientId),
+  };
+}
+
+export function getPayPalTechStatus() {
+  const config = getPayPalConfig();
+  return {
+    mode: config.mode,
+    currency: config.currency,
+    baseUrl: config.baseUrl,
+    brandName: config.brandName,
+    clientIdConfigured: Boolean(config.clientId),
+    clientSecretConfigured: Boolean(config.clientSecret),
+    webhookIdConfigured: Boolean(config.webhookId),
+    sdkReady: config.mode === "live" && Boolean(config.clientId),
+    apis: [
+      "Orders v2 create",
+      "Orders v2 capture",
+      "Orders v2 show",
+      "Captures refund",
+      "Webhook verify + ingest",
+      "Recovery-action PayPal execute",
+    ],
   };
 }
 
@@ -66,7 +112,7 @@ export async function getPayPalAccessToken(): Promise<string> {
 
 export async function paypalFetch<T>(
   path: string,
-  init?: RequestInit & { json?: unknown },
+  init?: RequestInit & { json?: unknown; idempotent?: boolean },
 ): Promise<T> {
   const { baseUrl, mode } = getPayPalConfig();
   if (mode === "mock") {
@@ -79,6 +125,11 @@ export async function paypalFetch<T>(
   const headers = new Headers(init?.headers);
   headers.set("Authorization", `Bearer ${token}`);
   headers.set("Content-Type", "application/json");
+  headers.set("Accept", "application/json");
+  headers.set("Prefer", "return=representation");
+  if (init?.idempotent !== false && (init?.method ?? "GET").toUpperCase() !== "GET") {
+    headers.set("PayPal-Request-Id", randomUUID());
+  }
 
   const response = await fetch(`${baseUrl}${path}`, {
     ...init,
@@ -106,4 +157,8 @@ export async function paypalFetch<T>(
 
 export function mockId(prefix: string) {
   return `${prefix}_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 8)}`;
+}
+
+export function pesosValueFromCentavos(centavos: number): string {
+  return (centavos / 100).toFixed(2);
 }

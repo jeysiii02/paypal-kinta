@@ -105,6 +105,15 @@ export function DisruptionWorkbench({
     estimatedNonrecoverableExpenses: "",
     potentialCustomerRefunds: "",
   });
+  const [brief, setBrief] = useState<{
+    headline: string;
+    audienceSummary: string;
+    recommendation: string;
+    why: string;
+    paypalNextStep: string;
+    caveats: string[];
+    generationMethod: string;
+  } | null>(null);
 
   const latestPlan = plans[0];
   const scenarios = useMemo(() => latestPlan?.scenarios ?? [], [latestPlan]);
@@ -155,6 +164,26 @@ export function DisruptionWorkbench({
       );
       setPlans([plan, ...plans]);
       setSelectedScenarioId(plan.scenarios?.[0]?.id ?? null);
+    });
+  }
+
+  async function generateBrief() {
+    await run("recovery brief", async () => {
+      const result = await api<{
+        brief: {
+          headline: string;
+          audienceSummary: string;
+          recommendation: string;
+          why: string;
+          paypalNextStep: string;
+          caveats: string[];
+          generationMethod: string;
+        };
+      }>(`/api/disruptions/${disruptionId}/recovery-brief`, {
+        method: "POST",
+        body: {},
+      });
+      setBrief(result.brief);
     });
   }
 
@@ -349,9 +378,18 @@ export function DisruptionWorkbench({
           title="3. Recovery scenarios"
           description="Cancel · Relocate · Reschedule with deterministic financials"
           action={
-            <Button onClick={generatePlans} disabled={pending || !analysis}>
-              Generate plans
-            </Button>
+            <div className="flex flex-wrap gap-2">
+              <Button onClick={generatePlans} disabled={pending || !analysis}>
+                Generate plans
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={generateBrief}
+                disabled={pending || scenarios.length === 0}
+              >
+                AI recovery brief
+              </Button>
+            </div>
           }
         />
         <CardBody className="space-y-5">
@@ -361,6 +399,29 @@ export function DisruptionWorkbench({
             </p>
           ) : (
             <>
+              {brief ? (
+                <div className="rounded-2xl border border-[var(--teal-line)] bg-[var(--teal-soft)] px-4 py-4">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold text-[var(--ink)]">{brief.headline}</p>
+                    <Badge tone="accent">{brief.generationMethod}</Badge>
+                    <Badge tone="info">{brief.recommendation}</Badge>
+                  </div>
+                  <p className="mt-2 text-sm text-[var(--ink)]">{brief.audienceSummary}</p>
+                  <p className="mt-2 text-sm text-[var(--ink)]">
+                    <span className="font-semibold">Why: </span>
+                    {brief.why}
+                  </p>
+                  <p className="mt-2 text-sm text-[var(--ink)]">
+                    <span className="font-semibold">PayPal next step: </span>
+                    {brief.paypalNextStep}
+                  </p>
+                  <ul className="mt-2 space-y-1 text-xs text-[var(--ink-muted)]">
+                    {brief.caveats.map((caveat) => (
+                      <li key={caveat}>• {caveat}</li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
               <div className="grid gap-3 lg:grid-cols-3">
                 {scenarios.map((scenario) => {
                   const financials = parseJsonField<ScenarioFinancials | null>(

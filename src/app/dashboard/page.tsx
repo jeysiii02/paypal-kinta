@@ -7,6 +7,7 @@ import { ButtonLink } from "@/components/ui/Button";
 import { Card, CardBody, CardHeader } from "@/components/ui/Card";
 import { EmptyState } from "@/components/ui/EmptyState";
 import { Stat } from "@/components/ui/Stat";
+import { TechStatusPanel } from "@/components/system/TechStatusPanel";
 import { getWorkspaceContext } from "@/lib/workspace";
 import { formatDateShort, formatDateTime } from "@/lib/datetime";
 import { formatPhp } from "@/lib/money";
@@ -105,6 +106,10 @@ export default async function DashboardPage() {
           hint={disruptedCount ? `${disruptedCount} project(s) disrupted` : undefined}
         />
         <Stat label="Budget tracked" value={formatPhp(totalBudget)} />
+      </div>
+
+      <div className="mt-8">
+        <TechStatusPanel />
       </div>
 
       <div className="mt-8 grid gap-6 xl:grid-cols-[1.35fr_0.9fr]">
