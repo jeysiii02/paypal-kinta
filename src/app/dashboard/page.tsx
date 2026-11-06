@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { AlertTriangle, Plus } from "lucide-react";
 import { connection } from "next/server";
 import { AppShell } from "@/components/layout/AppShell";
 import { Badge } from "@/components/ui/Badge";
@@ -8,7 +9,14 @@ import { EmptyState } from "@/components/ui/EmptyState";
 import { Stat } from "@/components/ui/Stat";
 import { getDemoContext } from "@/lib/demo";
 import { formatPhp } from "@/lib/money";
-import { labelize, projectStatusTone } from "@/lib/status";
+import {
+  actionStatusTone,
+  labelize,
+  projectStatusTone,
+} from "@/lib/status";
+import { prisma } from "@/lib/prisma";
+import { listActivityByProject } from "@/services/activity";
+import { listRecoveryActions } from "@/services/recoveryActions";
 
 export const instant = false;
 
@@ -16,60 +24,107 @@ export default async function DashboardPage() {
   await connection();
   const { user, projects, project } = await getDemoContext();
 
-  const activeCount = projects.filter((p) => p.status === "ACTIVE").length;
+  const activeCount = projects.filter((p) =>
+    ["ACTIVE", "RECOVERING", "DISRUPTED"].includes(p.status),
+  ).length;
   const disruptedCount = projects.filter((p) => p.status === "DISRUPTED").length;
   const totalBudget = projects.reduce((sum, p) => sum + p.budget, 0);
 
-  return (
-    <AppShell>
-      <div className="kinta-grid -mx-4 rounded-[28px] border border-[var(--line)] bg-white/55 px-4 py-8 sm:-mx-0 sm:px-8">
-        <div className="flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
-          <div className="max-w-2xl">
-            <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[var(--teal)]">
-              Demo workspace
-            </p>
-            <h1 className="mt-2 font-[family-name:var(--font-display)] text-4xl tracking-tight text-[var(--ink)] sm:text-5xl">
-              KINTA
-            </h1>
-            <p className="mt-3 text-base text-[var(--ink-muted)] sm:text-lg">
-              See disruption impact, compare recovery paths, and execute PayPal
-              Sandbox refunds with clear evidence — not guesswork.
-            </p>
-          </div>
-          <div className="rounded-2xl border border-[var(--line)] bg-white px-4 py-3 text-sm shadow-[var(--shadow-sm)]">
-            <p className="text-[var(--ink-muted)]">Signed in as</p>
-            <p className="font-semibold text-[var(--ink)]">{user.name}</p>
-            <p className="font-mono text-xs text-[var(--ink-muted)]">{user.email}</p>
-          </div>
-        </div>
+  const [disruptionCount, pendingActions, activity, upcoming] =
+    await Promise.all([
+      prisma.disruption.count({
+        where: {
+          project: { userId: user.id },
+          status: { not: "RESOLVED" },
+        },
+      }),
+      project
+        ? listRecoveryActions(project.id).then((actions) =>
+            actions.filter((a) =>
+              ["DRAFT", "NEEDS_CONFIRMATION", "AWAITING_APPROVAL"].includes(
+                a.status,
+              ),
+            ),
+          )
+        : Promise.resolve([]),
+      project
+        ? listActivityByProject(project.id, { limit: 8 })
+        : Promise.resolve([]),
+      prisma.project.findMany({
+        where: {
+          userId: user.id,
+          status: { not: "ARCHIVED" },
+          eventDate: { gte: new Date() },
+        },
+        orderBy: { eventDate: "asc" },
+        take: 5,
+      }),
+    ]);
 
-        <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
-          <Stat label="Projects" value={String(projects.length)} />
-          <Stat label="Active" value={String(activeCount)} />
-          <Stat label="Disrupted" value={String(disruptedCount)} />
-          <Stat label="Budget tracked" value={formatPhp(totalBudget)} />
+  return (
+    <AppShell title="Dashboard">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-[0.16em] text-[var(--teal)]">
+            Workspace overview
+          </p>
+          <h1 className="mt-1 font-[family-name:var(--font-display)] text-3xl tracking-tight text-[var(--ink)] sm:text-4xl">
+            Good day, {user.name.split(" ")[0]}
+          </h1>
+          <p className="mt-2 max-w-2xl text-sm text-[var(--ink-muted)] sm:text-base">
+            Track commitments, spot disruptions early, and move through recovery
+            with evidence-backed plans.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <ButtonLink href="/projects/new">
+            <Plus className="h-4 w-4" />
+            Create New Project
+          </ButtonLink>
+          <ButtonLink
+            href={
+              project
+                ? `/projects/${project.id}/disruptions/new`
+                : "/disruptions"
+            }
+            variant="secondary"
+          >
+            <AlertTriangle className="h-4 w-4" />
+            Report a Disruption
+          </ButtonLink>
         </div>
       </div>
 
-      <div className="mt-8 grid gap-6 lg:grid-cols-[1.4fr_0.8fr]">
+      <div className="mt-8 grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        <Stat label="Total projects" value={String(projects.length)} />
+        <Stat label="Active projects" value={String(activeCount)} />
+        <Stat
+          label="Active disruptions"
+          value={String(disruptionCount)}
+          hint={disruptedCount ? `${disruptedCount} project(s) disrupted` : undefined}
+        />
+        <Stat label="Budget tracked" value={formatPhp(totalBudget)} />
+      </div>
+
+      <div className="mt-8 grid gap-6 xl:grid-cols-[1.35fr_0.9fr]">
         <Card>
           <CardHeader
-            title="Projects"
-            description="Bootstrap from GET /api/users + GET /api/projects"
+            title="Recent projects"
+            description="From your workspace database"
             action={
-              project ? (
-                <ButtonLink href={`/projects/${project.id}`}>Open demo project</ButtonLink>
-              ) : null
+              <ButtonLink href="/projects" variant="ghost">
+                View all
+              </ButtonLink>
             }
           />
           <CardBody className="space-y-3">
             {projects.length === 0 ? (
               <EmptyState
                 title="No projects yet"
-                description="Seed the database to load University Tech Summit."
+                description="Create a project or run prisma db seed."
               />
             ) : (
-              projects.map((item) => (
+              projects.slice(0, 6).map((item) => (
                 <Link
                   key={item.id}
                   href={`/projects/${item.id}`}
@@ -105,30 +160,117 @@ export default async function DashboardPage() {
           </CardBody>
         </Card>
 
-        <Card>
-          <CardHeader
-            title="Recovery loop"
-            description="The path Dev 2 wires end-to-end"
-          />
-          <CardBody>
-            <ol className="space-y-4 text-sm text-[var(--ink-muted)]">
-              {[
-                "Report a disruption and attach notices",
-                "Run AI analysis + dependency mapping",
-                "Compare Cancel / Relocate / Reschedule",
-                "Approve actions, then capture or refund via PayPal",
-              ].map((step, index) => (
-                <li key={step} className="flex gap-3">
-                  <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[var(--ink)] text-xs font-bold text-white">
-                    {index + 1}
-                  </span>
-                  <span className="pt-1 text-[var(--ink)]">{step}</span>
-                </li>
-              ))}
-            </ol>
-          </CardBody>
-        </Card>
+        <div className="space-y-6">
+          <Card>
+            <CardHeader
+              title="Pending recovery actions"
+              description={project ? project.name : "No active project"}
+              action={
+                <ButtonLink href="/actions" variant="ghost">
+                  Action Center
+                </ButtonLink>
+              }
+            />
+            <CardBody className="space-y-3">
+              {pendingActions.length === 0 ? (
+                <p className="text-sm text-[var(--ink-muted)]">
+                  Nothing awaiting approval.
+                </p>
+              ) : (
+                pendingActions.slice(0, 5).map((action) => (
+                  <div
+                    key={action.id}
+                    className="rounded-xl border border-[var(--line)] px-3 py-3"
+                  >
+                    <div className="flex flex-wrap items-center gap-2">
+                      <p className="text-sm font-semibold">{action.title}</p>
+                      <Badge tone={actionStatusTone(action.status)}>
+                        {labelize(action.status)}
+                      </Badge>
+                    </div>
+                    <p className="mt-1 text-xs text-[var(--ink-muted)]">
+                      {labelize(action.type)}
+                      {action.amount != null
+                        ? ` · ${formatPhp(action.amount)}`
+                        : ""}
+                    </p>
+                  </div>
+                ))
+              )}
+            </CardBody>
+          </Card>
+
+          <Card>
+            <CardHeader
+              title="Upcoming events"
+              action={
+                <ButtonLink href="/projects" variant="ghost">
+                  Projects
+                </ButtonLink>
+              }
+            />
+            <CardBody className="space-y-3">
+              {upcoming.length === 0 ? (
+                <p className="text-sm text-[var(--ink-muted)]">
+                  No upcoming event dates.
+                </p>
+              ) : (
+                upcoming.map((item) => (
+                  <Link
+                    key={item.id}
+                    href={`/projects/${item.id}`}
+                    className="flex items-center justify-between gap-3 rounded-xl border border-[var(--line)] px-3 py-3 hover:bg-[var(--surface-2)]"
+                  >
+                    <div>
+                      <p className="text-sm font-semibold">{item.name}</p>
+                      <p className="text-xs text-[var(--ink-muted)]">
+                        {item.location}
+                      </p>
+                    </div>
+                    <p className="text-xs font-medium text-[var(--ink)]">
+                      {new Date(item.eventDate).toLocaleDateString("en-PH", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                      })}
+                    </p>
+                  </Link>
+                ))
+              )}
+            </CardBody>
+          </Card>
+        </div>
       </div>
+
+      <Card className="mt-6">
+        <CardHeader
+          title="Recent activity"
+          description="Live ActivityLog for the active project"
+          action={
+            <ButtonLink href="/activity" variant="ghost">
+              Full log
+            </ButtonLink>
+          }
+        />
+        <CardBody className="space-y-3">
+          {activity.length === 0 ? (
+            <p className="text-sm text-[var(--ink-muted)]">No activity yet.</p>
+          ) : (
+            activity.map((item) => (
+              <div
+                key={item.id}
+                className="border-b border-[var(--line)] pb-3 last:border-0"
+              >
+                <p className="text-sm text-[var(--ink)]">{item.message}</p>
+                <p className="mt-1 text-xs text-[var(--ink-muted)]">
+                  {labelize(item.action)} ·{" "}
+                  {new Date(item.createdAt).toLocaleString("en-PH")}
+                </p>
+              </div>
+            ))
+          )}
+        </CardBody>
+      </Card>
     </AppShell>
   );
 }
